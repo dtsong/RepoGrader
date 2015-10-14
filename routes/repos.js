@@ -66,9 +66,11 @@ function dataComplete(repoID, callback){
     }
     //Check if each of the requests have been returned
     if (repositories[i].getInfo!=null && repositories[i].commitActivity!=null && repositories[i].participation!=null && repositories[i].contributorList!=null && repositories[i].commitGraph != null ){
-        callback( true );
+        return(callback( true ));
     }
-    callback(false);
+    else{
+        return(callback(false));
+    }
  }
 
  function generateGraph(repositories, i, callback){
@@ -94,7 +96,7 @@ function dataComplete(repoID, callback){
     plotly.plot(data, graphOptions, function (err, msg) {
         // return the url for the graph
         console.log(msg);
-        callback(msg.url);
+        return(callback(msg.url));
     });
  }
 
@@ -125,27 +127,11 @@ router.get('/', function(req, res) {
                     extend(r,getInfo);
                     repositories.push(r);
                     console.log("NEW REPO "+ repository +" getInfo");
-
-                    generateGraph(repositories, repositories.length-1, function(url) {
-                        console.log(url);
-                        repositories[repositories.length-1].commitGraph = url;
-                        return;
-                    });
                 } else {
                     var i = index(repositories, repoID)
                     getInfo = {getInfo: data};
                     extend(repositories[i],getInfo);
                     console.log("ADDED getInfo info for REPO "+ repository)
-
-                    generateGraph(repositories, i, function(url) {
-                        console.log(url);
-                        repositories[i].commitGraph = url;
-                        dataComplete(repoID, function(complete){
-                            if (complete){
-                                res.render('home', { repos: repositories, 'reviews': reviews});
-                            }
-                        });
-                    });
                 }
             }
         });
@@ -168,17 +154,38 @@ router.get('/', function(req, res) {
                     extend(r,commitActivity);
                     repositories.push(r);
                     console.log("NEW REPO "+ repository +" commitActivity");
+                    generateGraph(repositories, repositories.length-1, function(url) {
+                        console.log(url);
+                        repositories[repositories.length-1].commitGraph = url;
+                        dataComplete(repoID, function(complete){
+                            if (complete){
+                                res.render('home', { repos: repositories, 'reviews': reviews});
+                            }
+                            else{
+                                console.log('incomplete');
+                                return;
+                            }
+                        });
+                    });
                 } else {
                     var i = index(repositories, repoID);
                     commitActivity = {commitActivity: data};
                     extend(repositories[i],commitActivity);
                     console.log("ADDED commitActivity info for REPO "+ repository);
+                    generateGraph(repositories, i, function(url) {
+                        console.log(url);
+                        repositories[i].commitGraph = url;
+                        dataComplete(repoID, function(complete){
+                            if (complete){
+                                res.render('home', { repos: repositories, 'reviews': reviews});
+                            }
+                            else{
+                                console.log('incomplete');
+                                return;
+                            }
+                        });
+                    });                   
                 }
-                dataComplete(repoID, function(complete){
-                    if (complete){
-                        res.render('home', { repos: repositories, 'reviews': reviews});
-                    }
-                });
             }
         });
 
