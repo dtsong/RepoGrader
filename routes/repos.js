@@ -17,12 +17,6 @@ var github = new GitHubApi({
     }
 });
 
-github.authenticate({
-    type: "basic",
-    username: 'peterpod',
-    password: 'darktree94'
-});
-
 var plotly = require('plotly')('peterpod','e876efj98k');
 var fs = require('fs');
 
